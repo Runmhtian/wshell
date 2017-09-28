@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/../12306/.idea/12306.iml" filepath="$PROJECT_DIR$/../12306/.idea/12306.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../Activity/.idea/Activity.iml" filepath="$PROJECT_DIR$/../Activity/.idea/Activity.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../algorithm/.idea/algorithm.iml" filepath="$PROJECT_DIR$/../algorithm/.idea/algorithm.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../jdata/.idea/jdata.iml" filepath="$PROJECT_DIR$/../jdata/.idea/jdata.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/weixin_final.iml" filepath="$PROJECT_DIR$/.idea/weixin_final.iml" />
+    </modules>
+  </component>
+</project>
