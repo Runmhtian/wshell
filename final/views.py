@@ -7,12 +7,13 @@ from xml.etree import ElementTree
 from .config import TOKEN
 from django.shortcuts import render
 import time
-from .function import calulate,reminder,weather
+from .function import calulate,reminder,weather,ticket12306
 
 
 logger=logging.getLogger(__name__)
 weather_pattern='(weather|wh)\s*(.*)'
 reminder_pattern='(reminder|rd)\s*(\w)?\s*(.*)'
+ticket_pattern='(ticket|tk)\s+(\S+)\s+(\S+)\s+(\d{8})\s*(.*)'
 
 
 def analysis_text(text, userid):
@@ -28,6 +29,10 @@ def analysis_text(text, userid):
     matched = re.match(reminder_pattern, text)
     if matched:
         return reminder.deal_reminder(matched.group(2), matched.group(3),userid)
+    matched=re.match(ticket_pattern,text)
+    if matched:
+        return ticket12306.query_ticket(
+            matched.group(2),matched.group(3),matched.group(4),matched.group(5))
     else:
         return text
 

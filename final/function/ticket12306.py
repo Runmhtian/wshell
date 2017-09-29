@@ -8,12 +8,14 @@ import logging
 import time
 import random
 import urllib
-from final.utils import retry
+from final.utils import retry,str2date
+from final.static.stations import station_dict
 
 
-static_path=os.path.join(os.path.dirname(os.path.dirname(__file__)),'static')
 logger=logging.getLogger(__name__)
-stations=dict()
+session=None
+create_time=0
+
 seat_dict={
     '高软':21,
     '软卧':23,
@@ -26,6 +28,12 @@ seat_dict={
     '商务座': 32,
     '动卧': 33
 }
+
+headers={
+'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+                                            '(KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36'
+}
+
 
 class Ticket:
     def __init__(self,args):
@@ -70,43 +78,21 @@ class Ticket:
         return s
 
 
-def station_info():
-
-    station_url='https://kyfw.12306.cn/otn/resources/js/framework/station_name.js'
-    station_path=os.path.join(static_path,'station_name.js')
-    if not os.path.exists(station_path):
-        logger.info('正在下载站点信息文件...')
-        s=requests.session()
-        resp=s.get(station_url, timeout=5, verify=False)
-        assert resp.status_code==200
-        with open(station_path,'wb') as f:
-            f.write(resp.content)
-    with open(station_path,'r',encoding='utf-8') as f:
-        data=f.read()
-        station_list=data.split('@')[1:]
-        for station in station_list:
-            items=station.split('|')
-            stations[items[1]]=items[2]
-
-
-class Order(threading.Thread):
-    def __init__(self,train_date,from_station,to_station,seats=None):
-        super(Order, self).__init__(name='thread')
+class Order():
+    def __init__(self,train_date,from_station,to_station,seats=None,session=None):
         self.train_date=train_date
-        self.from_station=stations.get(from_station)
-        self.to_station=stations.get(to_station)
+        self.from_station=station_dict.get(from_station)
+        self.to_station=station_dict.get(to_station)
         self.from_station_name=from_station
         self.to_station_name=to_station
-        self.s=requests.session()
-        self.s.headers.update({'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
-                                            '(KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36'
-                               })
         self.tickets=[]
         if seats:
             self.seats=seats
         else:
             self.seats=seat_dict.keys()
         self.purpose_code = 'ADULT'
+        self.ret_message=''
+        self.session=session
 
     def _check_tickets(self,ticket):
         if ticket[11]!='Y':
@@ -117,14 +103,11 @@ class Order(threading.Thread):
                     return True
         return False
 
+
     @retry(3)
     def _query_ticket(self):
-        url_init='https://kyfw.12306.cn/otn/leftTicket/init'
-        resp = self.s.get(url_init,verify=False)
-        if resp.status_code!=200:
-            return False
-        cookies=resp.cookies
 
+        cookies=self.session.cookies
         cookies_t1=str(self.from_station_name.encode('unicode_escape').replace(b'\\',b'%'))[2:-1]+'%2C'+self.from_station
         cookies_t2 = str(self.to_station_name.encode('unicode_escape').replace(b'\\', b'%'))[
                      2:-1] + '%2C' + self.to_station
@@ -136,7 +119,7 @@ class Order(threading.Thread):
         cookies.set('_jc_save_fromDate', self.train_date, domain='kyfw.12306.cn', path='/')
         cookies.set('_jc_save_toDate', self.train_date, domain='kyfw.12306.cn', path='/')
         cookies.set('_jc_save_wfdc_flag', 'dc', domain='kyfw.12306.cn', path='/')
-
+        # print(cookies)
         url_query=r'https://kyfw.12306.cn/otn/leftTicket/queryX'
 
         parameters=[
@@ -145,45 +128,84 @@ class Order(threading.Thread):
         ('leftTicketDTO.to_station',self.to_station),
         ('purpose_codes',self.purpose_code)
         ]
-        resp=self.s.get(url_query,cookies=cookies,params=parameters,verify=False,timeout=10,allow_redirects=True)
-        # print(resp.url)
-        if resp.status_code==200:
+        resp=self.session.get(url_query,cookies=cookies,params=parameters,verify=False,timeout=10,allow_redirects=True)
+        print(resp.url)
+        if resp.status_code==200 and resp.json():
             js=resp.json()
+            if 'data' not in js.keys():
+                print('2')
+                return False
+            print(js)
             data=js.get('data').get('result')
             if len(data) == 0:
-                return
+                print('3')
+                return False
             for result in data:
                 infos = result.strip().split('|')
                 if self._check_tickets(infos):
                     self.tickets.append(Ticket(infos))
             if len(self.tickets)==0:
-                return '没有满足要求的车次'
+                self.ret_message='没有满足要求的车次'
+                return True
             else:
-                return '\n'.join([ticket.get_str(self.seats) for ticket in self.tickets])
+                self.ret_message='\n'.join([ticket.get_str(self.seats) for ticket in self.tickets])
+                return True
         else:
-            return
+            print('4')
+            return False
 
     def run(self):
-        self.ret_message=self._query_ticket()
+        self._query_ticket()
 
-
+@retry(3)
+def update_session():
+    global session
+    url_init = 'https://kyfw.12306.cn/otn/leftTicket/init'
+    session = requests.Session()
+    session.headers.update(headers)
+    resp = session.get(url_init, verify=False)
+    if resp.status_code==200:
+        return True
+    else:
+        return False
 
 def query_ticket(from_station,to_station,train_date,seats=None):
-    #参数检测
-    if len(stations) == 0:
-        station_info()
-    order = Order(train_date, from_station, to_station, seats=seats)
-    order.start()
-    order.join()
+    import time
+    global create_time
+    if from_station not in station_dict.keys() or to_station not in station_dict.keys():
+        return '请确认输入城市名称是否正确'
+    import datetime
+
+    if (str2date(train_date)-datetime.datetime.now().date()).days>30:
+        return '预售期为30天'
+    train_date = str2date(train_date).strftime('%Y-%m-%d')
+    if seats or seats!='':
+        seats=seats.replace('，',',')
+        if ',' in seats:
+            seats=seats.split(',')
+            for seat in seats:
+                if seat not in seat_dict.keys():
+                    return '请输入正确的坐席'
+        else:
+            if seats not in seat_dict.keys():
+                return '请输入正确的坐席'
+            else:
+                seats=[seats]
+
+    if time.time()-create_time>3600.0:
+        update_session()
+
+    order = Order(train_date, from_station, to_station, seats=seats,session=session)
+    order.run()
     return order.ret_message
 
 
+
+
+
 if __name__ == '__main__':
-    if len(stations)==0:
-        station_info()
-    train_date='2017-09-27'
+    train_date='20171010'
     from_station=u'北京'
-    to_station=u'上海'
-    seats=[u'二等座',u'一等座',u'硬座']
-    order=Order(train_date,from_station,to_station,seats=seats)
-    order.start()
+    to_station=u'天津'
+    seats='硬座,一等座'
+    print(query_ticket(from_station,to_station,train_date,seats))

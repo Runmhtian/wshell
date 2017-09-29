@@ -6,7 +6,7 @@ import pickle
 from bs4 import BeautifulSoup
 from collections import namedtuple
 import logging
-from weixin_final.settings import BASE_DIR
+from wshell.settings import BASE_DIR
 import os
 
 logger=logging.getLogger(__name__)

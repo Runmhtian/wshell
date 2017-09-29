@@ -5,6 +5,7 @@ import logging
 
 logger=logging.getLogger(__name__)
 base_dir=os.path.dirname(os.path.dirname(__file__))
+static_path=os.path.join(os.path.dirname(__file__),'static')
 
 WELCOME="欢迎关注me！"
 
@@ -26,11 +27,25 @@ MENU = {
 '''
 
 
-
-# access_token = "I6-cIxDex7duOdC2guHhDWQftd9doaFw6GOo_JoSj3EOqvtZ5MOUqbgwWzglNL-yPZvzf3RKVqFpDQz9d9q0L1Tn" \
-#                "OoHJCWAQa4jKk27HSRsYXFaAGAFEM"
-# errcode_token = [42001, 41001, 40014]
-
+def station_info():
+    import requests
+    stations=dict()
+    station_url='https://kyfw.12306.cn/otn/resources/js/framework/station_name.js'
+    station_path=os.path.join(static_path,'station_name.js')
+    if not os.path.exists(station_path):
+        logger.info('正在下载站点信息文件...')
+        s=requests.session()
+        resp=s.get(station_url, timeout=5, verify=False)
+        assert resp.status_code==200
+        with open(station_path,'wb') as f:
+            f.write(resp.content)
+    with open(station_path,'r',encoding='utf-8') as f:
+        data=f.read()
+        station_list=data.split('@')[1:]
+        for station in station_list:
+            items=station.split('|')
+            stations[items[1]]=items[2]
+    return stations
 
 
 def retry(arg):
@@ -40,15 +55,27 @@ def retry(arg):
                 ret=func(*args,**kwargs)
                 if ret:
                     return ret
-            return '查询失败'
+            return False
         return __retry
     return _retry
 
 
+def str2date(data_str):
+    import datetime
+    return datetime.datetime.strptime(data_str,'%Y%m%d').date()
 
 if __name__ == '__main__':
-    test()
-
+    s='20170919'
+    t=str2date(s)
+    print(str2date(s))
+    import datetime
+    now=datetime.datetime.now().date()
+    print(now)
+    d=now-t
+    print(d.days)
+# access_token = "I6-cIxDex7duOdC2guHhDWQftd9doaFw6GOo_JoSj3EOqvtZ5MOUqbgwWzglNL-yPZvzf3RKVqFpDQz9d9q0L1Tn" \
+#                "OoHJCWAQa4jKk27HSRsYXFaAGAFEM"
+# errcode_token = [42001, 41001, 40014]
 
 
 
