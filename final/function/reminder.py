@@ -42,20 +42,20 @@ def deal_reminder(flag,desc,userid):
         except:
             return 'id not found,please check id'
     elif flag=='l':
-        try:
-            rems=Reminder.objects.filter(user_id=userid,vald_flag=True)[0:10]
+        rems=Reminder.objects.filter(user_id=userid,vald_flag=True).order_by('-date')[0:10]
+        if len(rems)!=0:
             l=[]
             for rem in rems:
                 s='%d %s'%(rem.id,rem.date)
                 l.append(s)
             return '\n'.join(l)
-        except:
+        else:
             return 'You probably dont have a reminder'
-    elif flag=='' and desc=='':
-        try:
-            rem = Reminder.objects.filter(user_id=userid, vald_flag=True).order_by('id')[0]
-            return u'【%s】%s' % (rem.date, rem.reminder)
-        except:
+    elif not flag and desc=='':
+        rem = Reminder.objects.filter(user_id=userid, vald_flag=True).order_by('-id')[0]
+        if len(rem)!=0:
+                return u'【%s】%s' % (rem.date, rem.reminder)
+        else:
             return 'You probably dont have a reminder'
     elif flag=='r':
         try:

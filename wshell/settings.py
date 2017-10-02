@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 import os
-os.environ['DJANGO_SETTINGS_MODULE'] = 'wshell.settings'
+# os.environ['DJANGO_SETTINGS_MODULE'] = 'wshell.settings'
 
 
 LOGGING = {
@@ -24,16 +24,21 @@ LOGGING = {
     },
     'handlers': {
         'file': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': 'log.log',
+            'filename': 'wshell.log',
+            'formatter': 'verbose'
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
             'formatter': 'verbose'
         },
     },
     'loggers': {
         'django': {
-            'handlers': ['file'],
-            'level': 'DEBUG',
+            'handlers': ['file','console'],
+            'level': 'INFO',
             'propagate': True,
         },
     },
@@ -106,11 +111,15 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         # 'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-        'database':'wshell',
-        'user':'root',
-        'password':'1q2w3e4r',
-        'default-character-set':'utf8'
+        'NAME':'wshell',
+        'USER':'root',
+        'PASSWORD':'1q2w3e4r',
+        'default-character-set':'utf8',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
+        'OPTIONS':{'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"}
     }
+
 }
 
 

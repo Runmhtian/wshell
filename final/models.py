@@ -14,3 +14,6 @@ class Reminder(models.Model):
     vald_flag=models.BooleanField()
 
 
+class Last_command(models.Model):
+    user_id = models.CharField(max_length=50,primary_key=True)
+    command=models.CharField(max_length=100)

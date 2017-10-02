@@ -8,21 +8,22 @@ from collections import namedtuple
 import logging
 from wshell.settings import BASE_DIR
 import os
+from final.static.city import CITY_DICT
+
 
 logger=logging.getLogger(__name__)
-CITY_DICT=None
 staticpath=os.path.join(os.path.join(BASE_DIR,'final'),'static')
 
 
 def query_weather(command,userid):
-    global CITY_DICT
+    # global CITY_DICT
     city=command.strip()
     if city=='':
         city='北京'
-    if not CITY_DICT:
-        fp=open(os.path.join(staticpath,'city.pkl'),'rb')
-        CITY_DICT=pickle.load(fp)
-        fp.close()
+    # if not CITY_DICT:
+    #     fp=open(os.path.join(staticpath,'city.pkl'),'rb')
+    #     CITY_DICT=pickle.load(fp)
+    #     fp.close()
     city_code=CITY_DICT.get(city)
     if city_code:
         '''
@@ -80,4 +81,4 @@ def spider_weather(city_code):
 
 
 if __name__ == '__main__':
-    print(query_weather('weather 北京'))
+    pass

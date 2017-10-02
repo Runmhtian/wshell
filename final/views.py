@@ -17,8 +17,18 @@ ticket_pattern='(ticket|tk)\s+(\S+)\s+(\S+)\s+(\d{8})\s*(.*)'
 
 
 def analysis_text(text, userid):
+    import re
+    from .models import Last_command
     text = text.strip().lower()
 
+    if text=='last' or text=='la':
+        try:
+            com=Last_command.objects.get(user_id=userid)
+            return analysis_text(com.command,userid)
+        except:
+            return '没有查到上一条命令'
+    com=Last_command(user_id=userid, command=text)
+    com.save()
     if text.startswith('cal'):
         return calulate.cal(text)
 
@@ -71,7 +81,8 @@ def weixin(request):
             }
             return render(request,'reply_text.xml',content)
         else:
-            return render(request,'reply_text.xml','暂不支持')
+            return render(request,'reply_text.xml','暂不支持的数据类型')
+
 
 def test(request):
     return HttpResponse('hello world %s'%time.ctime())

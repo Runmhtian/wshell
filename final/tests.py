@@ -1,7 +1,7 @@
+reminder_pattern='(reminder|rd)\s*(\w)?\s*(.*)'
+import re
 
-import time
-a=time.time()
-time.sleep(10)
-b=time.time()
-print(b-a)
+s='rd'
 
+t=re.match(reminder_pattern,s)
+print(t.groups())

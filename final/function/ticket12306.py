@@ -2,17 +2,13 @@
 
 import requests
 import os
-import threading
 import json
 import logging
-import time
-import random
-import urllib
 from final.utils import retry,str2date
 from final.static.stations import station_dict
 
 
-logger=logging.getLogger(__name__)
+logger=logging.getLogger('django')
 session=None
 create_time=0
 
@@ -91,7 +87,7 @@ class Order():
         else:
             self.seats=seat_dict.keys()
         self.purpose_code = 'ADULT'
-        self.ret_message=''
+        self.ret_message='查询失败'
         self.session=session
 
     def _check_tickets(self,ticket):
@@ -102,7 +98,6 @@ class Order():
                 if ticket[seat_dict[seat]] not in ['无','']:
                     return True
         return False
-
 
     @retry(3)
     def _query_ticket(self):
@@ -133,12 +128,11 @@ class Order():
         if resp.status_code==200 and resp.json():
             js=resp.json()
             if 'data' not in js.keys():
-                print('2')
+                logger.debug('no key data in %s'%str(js))
                 return False
-            print(js)
             data=js.get('data').get('result')
             if len(data) == 0:
-                print('3')
+                logger.debug('result is null %s'%str(js))
                 return False
             for result in data:
                 infos = result.strip().split('|')
@@ -148,14 +142,15 @@ class Order():
                 self.ret_message='没有满足要求的车次'
                 return True
             else:
-                self.ret_message='\n'.join([ticket.get_str(self.seats) for ticket in self.tickets])
+                self.ret_message='\n'.join([ticket.get_str(self.seats) for ticket in self.tickets[:10]])
                 return True
         else:
-            print('4')
+            logger.debug('返回状态码不是200')
             return False
 
     def run(self):
         self._query_ticket()
+
 
 @retry(3)
 def update_session():
@@ -169,16 +164,18 @@ def update_session():
     else:
         return False
 
+
 def query_ticket(from_station,to_station,train_date,seats=None):
-    import time
     global create_time
     if from_station not in station_dict.keys() or to_station not in station_dict.keys():
         return '请确认输入城市名称是否正确'
     import datetime
-
-    if (str2date(train_date)-datetime.datetime.now().date()).days>30:
+    train_date=str2date(train_date)
+    if not train_date:
+        return '非法日期'
+    if (train_date-datetime.datetime.now().date()).days>30:
         return '预售期为30天'
-    train_date = str2date(train_date).strftime('%Y-%m-%d')
+    train_date = train_date.strftime('%Y-%m-%d')
     if seats or seats!='':
         seats=seats.replace('，',',')
         if ',' in seats:
@@ -191,7 +188,7 @@ def query_ticket(from_station,to_station,train_date,seats=None):
                 return '请输入正确的坐席'
             else:
                 seats=[seats]
-
+    import time
     if time.time()-create_time>3600.0:
         update_session()
 
@@ -200,12 +197,9 @@ def query_ticket(from_station,to_station,train_date,seats=None):
     return order.ret_message
 
 
-
-
-
 if __name__ == '__main__':
-    train_date='20171010'
+    train_date='20171018'
     from_station=u'北京'
-    to_station=u'天津'
-    seats='硬座,一等座'
+    to_station=u'郑州'
+    seats=''
     print(query_ticket(from_station,to_station,train_date,seats))

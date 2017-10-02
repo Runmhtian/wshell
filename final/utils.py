@@ -55,24 +55,24 @@ def retry(arg):
                 ret=func(*args,**kwargs)
                 if ret:
                     return ret
-            return False
+            return ret
         return __retry
     return _retry
 
 
-def str2date(data_str):
+def str2date(date_str):
     import datetime
-    return datetime.datetime.strptime(data_str,'%Y%m%d').date()
+    try:
+        date=datetime.datetime.strptime(data_str,'%Y%m%d').date()
+        return date
+    except ValueError as e:
+        return
 
 if __name__ == '__main__':
-    s='20170919'
+    s='20170939'
     t=str2date(s)
     print(str2date(s))
-    import datetime
-    now=datetime.datetime.now().date()
-    print(now)
-    d=now-t
-    print(d.days)
+
 # access_token = "I6-cIxDex7duOdC2guHhDWQftd9doaFw6GOo_JoSj3EOqvtZ5MOUqbgwWzglNL-yPZvzf3RKVqFpDQz9d9q0L1Tn" \
 #                "OoHJCWAQa4jKk27HSRsYXFaAGAFEM"
 # errcode_token = [42001, 41001, 40014]
