@@ -63,7 +63,7 @@ def retry(arg):
 def str2date(date_str):
     import datetime
     try:
-        date=datetime.datetime.strptime(data_str,'%Y%m%d').date()
+        date=datetime.datetime.strptime(date_str,'%Y%m%d').date()
         return date
     except ValueError as e:
         return
