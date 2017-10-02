@@ -110,14 +110,10 @@ WSGI_APPLICATION = 'wshell.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        # 'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-        'NAME':'wshell',
-        'USER':'root',
-        'PASSWORD':'1q2w3e4r',
-        'default-character-set':'utf8',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
-        'OPTIONS':{'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"}
+        'OPTIONS':{
+            'read_default_file': os.path.join(os.path.dirname(__file__),'my.cnf'),
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
+        }
     }
 
 }

@@ -3,3 +3,4 @@ log.log
 *.pyc
 __pycache__/
 .idea/
+my.cnf
