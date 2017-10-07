@@ -1,5 +1,4 @@
 # coding=utf-8
-from django.shortcuts import render
 from django.http import HttpResponse
 import hashlib
 import logging
@@ -8,7 +7,7 @@ from .config import TOKEN
 from django.shortcuts import render
 import time
 from .function import calulate,reminder,weather,ticket12306
-
+from .utils import WELCOME,HELP
 
 logger=logging.getLogger(__name__)
 weather_pattern='(weather|wh)\s*(.*)'
@@ -20,13 +19,14 @@ def analysis_text(text, userid):
     import re
     from .models import Last_command
     text = text.strip().lower()
-
+    if text=='help':
+        return HELP
     if text=='last' or text=='la':
         try:
             com=Last_command.objects.get(user_id=userid)
             return analysis_text(com.command,userid)
         except:
-            return '没有查到上一条命令'
+            return 'You probably havent used a command yet'
     com=Last_command(user_id=userid, command=text)
     com.save()
     if text.startswith('cal'):
@@ -80,8 +80,18 @@ def weixin(request):
                 "content":ret_text
             }
             return render(request,'reply_text.xml',content)
+        elif msgtype == "event":
+            event = xml.find("Event").text
+            content = {
+                "toUser": userid,
+                "fromUser": myid,
+                "createTime": int(time.time()),
+                "content": WELCOME
+            }
+            if event == 'subscribe' or event == 'unsubscribe':
+                return render(request,'reply_text.xml',content)
         else:
-            return render(request,'reply_text.xml','暂不支持的数据类型')
+            return render(request,'reply_text.xml','an unsupported command')
 
 
 def test(request):

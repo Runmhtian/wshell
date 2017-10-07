@@ -7,7 +7,8 @@ logger=logging.getLogger(__name__)
 base_dir=os.path.dirname(os.path.dirname(__file__))
 static_path=os.path.join(os.path.dirname(__file__),'static')
 
-WELCOME="欢迎关注me！"
+WELCOME="欢迎关注me！请输入“help”跟我学习如何使用wshell！"
+HELP='http://47.94.132.48/static/wshell.html'
 
 '''
 MENU = {

@@ -29,13 +29,13 @@ reminder/rd h 显示帮助
 def deal_reminder(flag,desc,userid):
     if flag=='c':
         if desc=='':
-            return 'create reminder failed,please use <rd c info>'
+            return 'create reminder failed,please use [rd c info]'
         rem=Reminder(user_id=userid,reminder=desc,vald_flag=True)
         rem.save()
-        return 'use <reminder i %d> display'%rem.id
+        return 'use [reminder i %d] display'%rem.id
     elif flag=='i':
         if desc=='':
-            return 'please use <rd i id>'
+            return 'please use [rd i id]'
         try:
             rem=Reminder.objects.get(id=int(desc),vald_flag=True)
             return u'【%s】%s'%(rem.date,rem.reminder)

@@ -40,9 +40,9 @@ def query_weather(command,userid):
                 s+=u'【%s】%s,%s,%s\n'%(d_wea.day,d_wea.wea,d_wea.tem,d_wea.em)
             return s
         else:
-            return '获取信息失败'
+            return 'an error has occurred!'
     else:
-        return '您输入的城市名称有误！'
+        return 'incorrect city,please check！'
 
 
 def spider_weather(city_code):
