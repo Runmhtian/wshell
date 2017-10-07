@@ -1,5 +1,8 @@
 config.py
-log.log
+*.log
+*.sock
+*.pid
+*.ini
 *.pyc
 __pycache__/
 .idea/
