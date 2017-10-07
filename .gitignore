@@ -6,4 +6,4 @@ config.py
 *.pyc
 __pycache__/
 .idea/
-my.cnf
+*.cnf
